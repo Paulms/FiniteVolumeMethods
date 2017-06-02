@@ -32,7 +32,7 @@ CONTAINS
       CLASS(KT1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
-      type(CLS1DDiffusionProblem) :: prob
+      TYPE(CLS1DDiffusionProblem) :: prob
       REAL(kind = dp)               :: dx, theta
       REAL(kind = dp), ALLOCATABLE  :: uo(:,:), Du(:,:), uminus(:,:), uplus(:,:), aa(:)
       REAL(kind = dp), ALLOCATABLE  :: u_l(:,:), u_r(:,:), Df_l(:,:), Df_r(:,:), Psir(:,:), Psi(:,:)

@@ -51,25 +51,57 @@ IMPLICIT NONE
       procedure :: initialize => init_1DDiffProblem
   end type CLS1DDiffusionProblem
 
+  type, public :: CLS1DProblem
+      type(Uniform1DMesh)     :: mesh
+      real(kind=dp)           :: Tend
+      integer                 :: M
+      REAL(KIND=dp), ALLOCATABLE  :: u0(:,:)
+      REAL(KIND=dp), ALLOCATABLE  :: uu(:,:)
+      procedure(Abstractflux),pointer,nopass :: f
+      procedure(AbstractJacF),pointer,nopass :: Jf
+      CONTAINS
+      procedure :: initialize => init_1DProblem
+  end type CLS1DProblem
+
 !Algorithms type
-  type, abstract, public :: FVDiff1DAlgorithm
+
+  type, abstract, public :: FVAlgorithm
   CONTAINS
-      procedure(abstractUpdateRHS), deferred :: update
       procedure(abstractGetStartMessage), deferred :: getStartMessage
+  end type FVAlgorithm
+
+  type, abstract, public, extends(FVAlgorithm) :: FVDiff1DAlgorithm
+    CONTAINS
+      procedure(abstractUpdateDiffRHS), deferred :: update
   end type FVDiff1DAlgorithm
+
+  type, abstract, public, extends(FVAlgorithm) :: FV1DAlgorithm
+    CONTAINS
+      procedure(abstractUpdateRHS), deferred :: update
+  end type FV1DAlgorithm
+  
   abstract interface
-      subroutine abstractUpdateRHS(alg, rhs, uold, dt, prob)
+      subroutine abstractUpdateDiffRHS(alg, rhs, uold, dt, prob)
           import :: dp
           import FVDiff1DAlgorithm
           import CLS1DDiffusionProblem
           CLASS(FVDiff1DAlgorithm)  :: alg
           real(kind = dp), intent(in) :: uold(:,:)
           real(kind = dp) :: rhs(:,:), dt
-          type(CLS1DDiffusionProblem) :: prob
+          TYPE(CLS1DDiffusionProblem) :: prob
+      end subroutine abstractUpdateDiffRHS
+      subroutine abstractUpdateRHS(alg, rhs, uold, dt, prob)
+          import :: dp
+          import FV1DAlgorithm
+          import CLS1DProblem
+          CLASS(FV1DAlgorithm)  :: alg
+          real(kind = dp), intent(in) :: uold(:,:)
+          real(kind = dp) :: rhs(:,:), dt
+          TYPE(CLS1DProblem) :: prob
       end subroutine abstractUpdateRHS
       function abstractGetStartMessage(alg) result(message)
-            import FVDiff1DAlgorithm
-            CLASS(FVDiff1DAlgorithm)  :: alg
+            import FVAlgorithm
+            CLASS(FVAlgorithm)  :: alg
             CHARACTER(LEN=32)             :: message
       end function abstractGetStartMessage
 end interface
@@ -110,5 +142,23 @@ end interface
       problem%Jf => JacF
       problem%K => DiffMat
   end subroutine init_1DDiffProblem
+    subroutine init_1DProblem(problem, mesh, u0, M, Tend, Flux, JacF)
+      CLASS(CLS1DProblem)  :: problem
+      type(Uniform1DMesh)           :: mesh
+      REAL(KIND=dp)                 :: u0(:,:), Tend
+      integer           :: M,N
+      procedure(Abstractflux) :: Flux
+      procedure(AbstractJacF) :: JacF
+      !========================
+      N = mesh%N
+      ALLOCATE(problem%uu(N,M), problem%u0(N,M))
+      problem%M = M
+      problem%uu = u0
+      problem%u0 = u0
+      problem%Tend = Tend
+      problem%mesh = mesh
+      problem%f => Flux
+      problem%Jf => JacF
+  end subroutine init_1DProblem
 
 END MODULE FVTypes
