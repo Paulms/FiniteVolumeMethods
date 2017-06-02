@@ -50,6 +50,8 @@ At the moment available methods are: Forward Euler (`FORWARD_EULER`), Strong Sta
 ```fortran
   ! Setup Mesh
   USE FVtypes
+  USE EC_scheme
+  USE FV_Solve
   INTEGER|                        :: N        ! Number of cells
   REAL(kind = dp)                 :: xinit, xend 
   INTEGER                         :: bdtype
