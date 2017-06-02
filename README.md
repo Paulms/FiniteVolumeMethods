@@ -28,7 +28,7 @@ At the momento only Cartesian 1D uniform mesh available, using `FVMesh(N,a,b,bou
 
 `bdtype` = boundary type (ZERO_FLUX, PERIODIC)
 
-* Problem types: System of Conservation Laws with diffusion term (`CLS1DDiuffsionProblem`).
+* Problem types: System of Conservation Laws with diffusion term (`CLS1DDiffusionProblem`).
 
 ### Algorithms
 
@@ -63,7 +63,7 @@ At the moment available methods are: Forward Euler (`FORWARD_EULER`), Strong Sta
   INTEGER                         :: M    ! number of equations in system
   REAL(kind = dp)                 :: Tend ! Final time
   REAL(kind = dp), ALLOCATABLE    :: uinit(:,:) ! Initial condition
-  type(CLS1DDiuffsionProblem)     :: prob
+  type(CLS1DDiffusionProblem)     :: prob
   M = 4; Tend = 0.2;
   ALLOCATE(uinit(N,M))
   uinit = 0.0_dp;

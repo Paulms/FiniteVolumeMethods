@@ -35,7 +35,7 @@ subroutine test3_run()
   REAL(kind = dp), ALLOCATABLE    :: results(:,:)
   CHARACTER(LEN=8), ALLOCATABLE  :: names(:)
   type(Uniform1DMesh) :: mesh
-  type(CLS1DDiuffsionProblem) :: prob
+  type(CLS1DDiffusionProblem) :: prob
   type(KT1DAlgorithm)         :: KtAlg
   type(ESJPe1DAlgorithm)       :: ESPJeAlg
   ! Zero variables

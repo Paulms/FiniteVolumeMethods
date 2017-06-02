@@ -38,7 +38,7 @@ IMPLICIT NONE
       procedure :: initialize => init_uniform1d
   end type Uniform1DMesh
 !Problem Type
-  type, public :: CLS1DDiuffsionProblem
+  type, public :: CLS1DDiffusionProblem
       type(Uniform1DMesh)     :: mesh
       real(kind=dp)           :: Tend
       integer                 :: M
@@ -49,7 +49,8 @@ IMPLICIT NONE
       procedure(AbstractDiffMat),pointer,nopass :: K
       CONTAINS
       procedure :: initialize => init_1DDiffProblem
-  end type CLS1DDiuffsionProblem
+  end type CLS1DDiffusionProblem
+
 !Algorithms type
   type, abstract, public :: FVDiff1DAlgorithm
   CONTAINS
@@ -60,11 +61,11 @@ IMPLICIT NONE
       subroutine abstractUpdateRHS(alg, rhs, uold, dt, prob)
           import :: dp
           import FVDiff1DAlgorithm
-          import CLS1DDiuffsionProblem
+          import CLS1DDiffusionProblem
           CLASS(FVDiff1DAlgorithm)  :: alg
           real(kind = dp), intent(in) :: uold(:,:)
           real(kind = dp) :: rhs(:,:), dt
-          type(CLS1DDiuffsionProblem) :: prob
+          type(CLS1DDiffusionProblem) :: prob
       end subroutine abstractUpdateRHS
       function abstractGetStartMessage(alg) result(message)
             import FVDiff1DAlgorithm
@@ -90,7 +91,7 @@ end interface
   end subroutine init_uniform1d
   ! Problem type
   subroutine init_1DDiffProblem(problem, mesh, u0, M, Tend, Flux, JacF, DiffMat)
-      CLASS(CLS1DDiuffsionProblem)  :: problem
+      CLASS(CLS1DDiffusionProblem)  :: problem
       type(Uniform1DMesh)           :: mesh
       REAL(KIND=dp)                 :: u0(:,:), Tend
       integer           :: M,N

@@ -82,7 +82,7 @@ CONTAINS
       CLASS(ESJP1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
-      type(CLS1DDiuffsionProblem) :: prob
+      type(CLS1DDiffusionProblem) :: prob
       REAL(kind = dp)               :: dx, epsilon
 
       INTEGER                       :: N, j,M, boundary, ss
@@ -130,7 +130,7 @@ CONTAINS
       CLASS(ESJPe1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
-      type(CLS1DDiuffsionProblem) :: prob
+      type(CLS1DDiffusionProblem) :: prob
       REAL(kind = dp)               :: dx, epsilon
 
       INTEGER                       :: N, j,M, boundary, ss

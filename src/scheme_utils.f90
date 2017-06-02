@@ -4,8 +4,8 @@ USE FVTypes
 IMPLICIT NONE
 CONTAINS
 
-function cdt (u, prob, CFL) result(dt)
-  type(CLS1DDiuffsionProblem) :: prob
+function cdtdiff(u, prob, CFL) result(dt)
+  type(CLS1DDiffusionProblem) :: prob
   REAL(kind = dp), intent(in)  :: u(:,:), CFL
   REAL(kind = dp)              :: dt, dx
   REAL(kind = dp)              :: maxp, maxpB
@@ -40,7 +40,7 @@ function cdt (u, prob, CFL) result(dt)
   end do
   dt = CFL/(1/dx*maxp+1/(2*dx**2)*maxpB)
   DEALLOCATE(B, J)
-end function cdt
+end function cdtdiff
 
 function  fluxp(u, JacF) result(pp)
   REAL(kind = dp), intent(in)  :: u(:)

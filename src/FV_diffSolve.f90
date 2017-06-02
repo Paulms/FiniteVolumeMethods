@@ -13,7 +13,7 @@ subroutine solve(problem, time_scheme, algorithm, CFL)
   REAL(kind = dp)           :: tt
   REAL(kind = dp), ALLOCATABLE  :: tmp(:,:), uold(:,:),rhs(:,:),rhs2(:,:)
   REAL(kind=dp)             :: tiempo1, tiempo2
-  type(CLS1DDiuffsionProblem) :: problem
+  type(CLS1DDiffusionProblem) :: problem
   CLASS(FVDiff1DAlgorithm)     :: algorithm
   CHARACTER(LEN=32)             :: message
 
@@ -40,7 +40,7 @@ subroutine solve(problem, time_scheme, algorithm, CFL)
   problem%uu = problem%u0
    DO WHILE (tt <= Tend)
     uold = problem%uu
-    dt = cdt(uold, problem, CFL)
+    dt = cdtdiff(uold, problem, CFL)
     !Scheme with forward Euler
     IF (time_scheme == FORWARD_EULER) THEN
       CALL algorithm%update(rhs, uold, dt,problem)
