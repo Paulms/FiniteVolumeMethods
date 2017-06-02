@@ -1,0 +1,17 @@
+{
+    "version": "0.1.0",
+    "isShellCommand": true,
+    "tasks": [
+        {
+            "taskName": "Make",
+            // Make this the default build command.
+            "isBuildCommand": true,
+            "command": "make",
+            // Show the output window only if unrecognized errors occur.
+            "showOutput": "always",
+            "options": {
+              "cwd": "${workspaceRoot}/src"
+            }
+        }
+    ]
+}
