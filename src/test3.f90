@@ -10,7 +10,7 @@ USE plot
 USE FVTypes
 USE KT_scheme
 USE EC_scheme
-USE FV_Solve
+USE FV_diffSolve
 IMPLICIT NONE
 PUBLIC test3_run
 PRIVATE

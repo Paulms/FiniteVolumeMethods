@@ -1,4 +1,4 @@
-MODULE FV_Solve
+MODULE FV_diffSolve
 USE decimal
 USE FVTypes
 USE scheme_utils
@@ -78,4 +78,4 @@ subroutine solve(problem, time_scheme, algorithm, CFL)
   DEALLOCATE(uold, rhs, tmp,rhs2)
 end subroutine solve
 
-END MODULE FV_Solve
+END MODULE FV_diffSolve

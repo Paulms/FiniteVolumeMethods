@@ -51,7 +51,7 @@ At the moment available methods are: Forward Euler (`FORWARD_EULER`), Strong Sta
   ! Setup Mesh
   USE FVtypes
   USE EC_scheme
-  USE FV_Solve
+  USE FV_diffSolve
   INTEGER|                        :: N        ! Number of cells
   REAL(kind = dp)                 :: xinit, xend 
   INTEGER                         :: bdtype
