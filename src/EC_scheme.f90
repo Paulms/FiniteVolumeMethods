@@ -54,6 +54,7 @@ CONTAINS
       alg%epsilon = epsilon
       alg%Nf => NFlux
       alg%Nk => NDiffMat
+      alg%update_dt => cdtdiff
   end subroutine init_ES
   subroutine init_EES(alg, Nflux, NDiffMat, entropyV, epsilon)
       CLASS(ESJPe1DAlgorithm)    :: alg
@@ -66,6 +67,7 @@ CONTAINS
       alg%Nf => NFlux
       alg%Nk => NDiffMat
       alg%ve => entropyV
+      alg%update_dt => cdtdiff
   end subroutine init_EES
   function start_message_ES(alg) result(message)
       CLASS(ESJP1DAlgorithm)  :: alg
@@ -77,7 +79,6 @@ CONTAINS
       CHARACTER(LEN=32)             :: message
       message = "Starting Entropy Stable (ev) - Non conservative diffusion ..."
   end function start_message_EES
-
   subroutine update_ES(alg, rhs, uold, dt, prob)
       CLASS(ESJP1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)

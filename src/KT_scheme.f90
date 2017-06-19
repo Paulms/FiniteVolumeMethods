@@ -16,18 +16,16 @@ IMPLICIT NONE
 
 CONTAINS
     !Optional
-    subroutine init_KT(alg, theta)
+    subroutine init_KT(alg)
       CLASS(KT1DAlgorithm)    :: alg
-      real(kind=dp)           ::theta
       !========================
-      alg%theta = theta
+      alg%update_dt => cdtdiff
   end subroutine init_KT
   function start_message_Kt(alg) result(message)
       CLASS(KT1DAlgorithm)  :: alg
       CHARACTER(LEN=32)             :: message
       message = "Starting Kurganov-Tadmor Scheme..."
   end function start_message_Kt
-
   subroutine update_KT(alg, rhs, uold, dt, prob)
       CLASS(KT1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)

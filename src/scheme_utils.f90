@@ -5,7 +5,7 @@ IMPLICIT NONE
 CONTAINS
 
 function cdtdiff(u, prob, CFL) result(dt)
-  type(CLS1DDiffusionProblem) :: prob
+  TYPE(CLS1DDiffusionProblem) :: prob
   REAL(kind = dp), intent(in)  :: u(:,:), CFL
   REAL(kind = dp)              :: dt, dx
   REAL(kind = dp)              :: maxp, maxpB

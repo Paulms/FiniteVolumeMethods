@@ -10,7 +10,7 @@ USE plot
 USE FVTypes
 USE KT_scheme
 USE EC_scheme
-USE FV_diffSolve
+USE FV_Solve
 IMPLICIT NONE
 PUBLIC test1_run
 PRIVATE
@@ -53,6 +53,7 @@ subroutine test1_run()
   results(:,1) = mesh%x
   results(:,2:5) = uinit(:,1:4)
   CALL save_matrix(results, names, name, 0)
+  CALL KtAlg%Initialize()
   CALL solve(prob, SSPRK22, KtAlg, CFL)
   results(:,2:5) = prob%uu(:,1:4)
   name = 'test_1_500_kt'
