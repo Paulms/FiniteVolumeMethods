@@ -49,11 +49,11 @@ subroutine test1_run()
   CALL prob%Initialize(mesh, uinit, M, Tend, Flux, JacF, BB)
   name = 'test_1_500_ini'
   ALLOCATE(results(N, M+1), names(M+1))
-  names = ['X       ', 'y1      ','y2      ', 'y3      ', 'y4      ']
+  names = ['x       ', 'y1      ','y2      ', 'y3      ', 'y4      ']
   results(:,1) = mesh%x
   results(:,2:5) = uinit(:,1:4)
   CALL save_matrix(results, names, name, 0)
-  CALL KtAlg%Initialize()
+  !CALL KtAlg%Initialize()
   CALL solve(prob, SSPRK22, KtAlg, CFL)
   results(:,2:5) = prob%uu(:,1:4)
   name = 'test_1_500_kt'

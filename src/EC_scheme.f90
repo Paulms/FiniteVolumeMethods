@@ -27,6 +27,7 @@ IMPLICIT NONE
     procedure(AbstractNflux),pointer,nopass :: Nf
     procedure(AbstractNMatDiff),pointer,nopass :: Nk
   contains
+    procedure :: update_dt => update_dt_ES
     procedure :: update => update_ES
     procedure :: getStartMessage => start_message_ES
     procedure :: initialize => init_ES
@@ -38,6 +39,7 @@ IMPLICIT NONE
     procedure(AbstractNMatDiff),pointer,nopass :: Nk
     procedure(AbstractEntropyV),pointer,nopass :: ve
   contains
+    procedure :: update_dt => update_dt_EES
     procedure :: update => update_EES
     procedure :: getStartMessage => start_message_EES
     procedure :: initialize => init_EES
@@ -54,7 +56,6 @@ CONTAINS
       alg%epsilon = epsilon
       alg%Nf => NFlux
       alg%Nk => NDiffMat
-      alg%update_dt => cdtdiff
   end subroutine init_ES
   subroutine init_EES(alg, Nflux, NDiffMat, entropyV, epsilon)
       CLASS(ESJPe1DAlgorithm)    :: alg
@@ -67,7 +68,6 @@ CONTAINS
       alg%Nf => NFlux
       alg%Nk => NDiffMat
       alg%ve => entropyV
-      alg%update_dt => cdtdiff
   end subroutine init_EES
   function start_message_ES(alg) result(message)
       CLASS(ESJP1DAlgorithm)  :: alg
@@ -79,22 +79,32 @@ CONTAINS
       CHARACTER(LEN=32)             :: message
       message = "Starting Entropy Stable (ev) - Non conservative diffusion ..."
   end function start_message_EES
-  subroutine update_ES(alg, rhs, uold, dt, prob)
+  function update_dt_ES (alg, u, CFL) result(dt)
+    CLASS(ESJP1DAlgorithm)  :: alg
+    REAL(kind = dp), intent(in)  :: u(:,:), CFL
+    REAL(kind = dp)              :: dt
+    dt = cdtdiff(u, alg%problem, CFL)
+  end function update_dt_ES
+    function update_dt_EES (alg, u, CFL) result(dt)
+    CLASS(ESJPe1DAlgorithm)  :: alg
+    REAL(kind = dp), intent(in)  :: u(:,:), CFL
+    REAL(kind = dp)              :: dt
+    dt = cdtdiff(u, alg%problem, CFL)
+  end function update_dt_EES
+  subroutine update_ES(alg, rhs, uold, dt)
       CLASS(ESJP1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
-      type(CLS1DDiffusionProblem) :: prob
       REAL(kind = dp)               :: dx, epsilon
-
       INTEGER                       :: N, j,M, boundary, ss
       REAL(kind = dp), ALLOCATABLE  :: uleft(:), uright(:), kleft(:,:), kright(:,:)
 
       !==================
-      N = prob%mesh%N
-      M = prob%M
-      dx = prob%mesh%dx
+      N = alg%problem%mesh%N
+      M = alg%problem%M
+      dx = alg%problem%mesh%dx
       epsilon = alg%epsilon
-      boundary = prob%mesh%bdtype
+      boundary = alg%problem%mesh%bdtype
 
       ALLOCATE(uleft(M), uright(M), kleft(M,M), kright(M,M))
       uleft = 0.0_dp; uright = 0.0_dp; kleft = 0.0_dp;kright = 0.0_dp
@@ -127,22 +137,20 @@ CONTAINS
 
   end subroutine update_ES
 
-  subroutine update_EES(alg, rhs, uold, dt, prob)
+  subroutine update_EES(alg, rhs, uold, dt)
       CLASS(ESJPe1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
-      type(CLS1DDiffusionProblem) :: prob
       REAL(kind = dp)               :: dx, epsilon
-
       INTEGER                       :: N, j,M, boundary, ss
       REAL(kind = dp), ALLOCATABLE  :: vold(:,:),vleft(:), vright(:), kleft(:,:), kright(:,:)
 
       !==================
-      N = prob%mesh%N
-      M = prob%M
-      dx = prob%mesh%dx
+      N = alg%problem%mesh%N
+      M = alg%problem%M
+      dx = alg%problem%mesh%dx
       epsilon = alg%epsilon
-      boundary = prob%mesh%bdtype
+      boundary = alg%problem%mesh%bdtype
 
       ALLOCATE(vold(N,M),vleft(M), vright(M), kleft(M,M), kright(M,M))
       vleft = 0.0_dp; vright = 0.0_dp; kleft = 0.0_dp;kright = 0.0_dp

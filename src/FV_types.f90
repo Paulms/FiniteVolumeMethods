@@ -63,54 +63,38 @@ IMPLICIT NONE
 
 !Algorithms type 
   type, abstract, public :: AbstractFV1DAlgorithm
+    !CLASS(AbstractCLS1DProblem), ALLOCATABLE :: problem
   CONTAINS
-      procedure(abstractGetStartMessage), deferred :: getStartMessage
+    procedure(abstractUpdateRHS), deferred :: update
+    procedure(abstractCDT),deferred :: update_dt
+    procedure(abstractGetStartMessage), deferred :: getStartMessage
   end type AbstractFV1DAlgorithm
 
 type, abstract, public, extends(AbstractFV1DAlgorithm) :: FVDiff1DAlgorithm
-    procedure(abstractDiffCDT),pointer,nopass :: update_dt
-    CONTAINS
-      procedure(abstractUpdateDiffRHS), deferred :: update
+    TYPE(CLS1DDiffusionProblem) :: problem
+    !CONTAINS
+      !procedure(abstractUpdateDiffRHS), deferred :: update
   end type FVDiff1DAlgorithm
 
   type, abstract, public, extends(AbstractFV1DAlgorithm) :: FV1DAlgorithm
-  procedure(abstractCDT),pointer,nopass :: update_dt
-    CONTAINS
-      procedure(abstractUpdateRHS), deferred :: update
+    TYPE(CLS1DProblem) :: problem
+    !CONTAINS
    end type FV1DAlgorithm
 
   abstract interface
-      function abstractDiffCDT (u, prob, CFL) result(dt)
+      function abstractCDT (alg, u, CFL) result(dt)
         import :: dp
-        import ::  CLS1DDiffusionProblem
-        TYPE( CLS1DDiffusionProblem) :: prob
-        REAL(kind = dp), intent(in)  :: u(:,:), CFL
-        REAL(kind = dp)              :: dt
-      end function abstractDiffCDT
-      function abstractCDT (u, prob, CFL) result(dt)
-        import :: dp
-        import :: CLS1DProblem
-        TYPE(CLS1DProblem) :: prob
+        import :: AbstractFV1DAlgorithm
+        CLASS(AbstractFV1DAlgorithm) :: alg
         REAL(kind = dp), intent(in)  :: u(:,:), CFL
         REAL(kind = dp)              :: dt
       end function abstractCDT
-      subroutine abstractUpdateDiffRHS(alg, rhs, uold, dt, prob)
+      subroutine abstractUpdateRHS(alg, rhs, uold, dt)
           import :: dp
-          import FVDiff1DAlgorithm
-          import CLS1DDiffusionProblem
-          CLASS(FVDiff1DAlgorithm)  :: alg
+          import AbstractFV1DAlgorithm
+          CLASS(AbstractFV1DAlgorithm)  :: alg
           real(kind = dp), intent(in) :: uold(:,:)
           real(kind = dp) :: rhs(:,:), dt
-          TYPE(CLS1DDiffusionProblem) :: prob
-      end subroutine abstractUpdateDiffRHS
-      subroutine abstractUpdateRHS(alg, rhs, uold, dt, prob)
-          import :: dp
-          import FV1DAlgorithm
-          import :: CLS1DProblem
-          CLASS(FV1DAlgorithm)  :: alg
-          real(kind = dp), intent(in) :: uold(:,:)
-          real(kind = dp) :: rhs(:,:), dt
-          CLASS(CLS1DProblem) :: prob
       end subroutine abstractUpdateRHS
       function abstractGetStartMessage(alg) result(message)
             import AbstractFV1DAlgorithm
