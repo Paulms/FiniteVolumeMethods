@@ -10,7 +10,7 @@ USE plot
 USE FVTypes
 USE KT_scheme
 USE EC_scheme
-USE FV_diffSolve
+USE FV_Solve
 IMPLICIT NONE
 PUBLIC test3_run
 PRIVATE
@@ -52,7 +52,7 @@ subroutine test3_run()
   CALL prob%Initialize(mesh, uinit, M, Tend, Flux, JacF, BB)
   name = 'test_3_100_ini'
   ALLOCATE(results(N, M+1), names(M+1))
-  names = ['X       ', 'y1      ','y2      ', 'y3      ', 'y4      ']
+  names = ['x       ', 'y1      ','y2      ', 'y3      ', 'y4      ']
   results(:,1) = mesh%x
   results(:,2:5) = uinit(:,1:4)
   CALL save_matrix(results, names, name, 0)

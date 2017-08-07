@@ -48,7 +48,7 @@ subroutine test2_run()
   CALL setup_problem(dx, L, N, M, xx, uu, uinit)
   name = 'test_2_500_3_ini'
   ALLOCATE(results(N, M+1), names(M+1))
-  names = ['X       ', 'y1      ','y2      ', 'y3      ', 'y4      ','y5      ','y6      ','y7      ','y8      ']
+  names = ['x       ', 'y1      ','y2      ', 'y3      ', 'y4      ','y5      ','y6      ','y7      ','y8      ']
   results(:,1) = xx
   results(:,2:M+1) = uinit(:,1:M)
   CALL save_matrix(results, names, name, 0)

@@ -38,12 +38,15 @@ IMPLICIT NONE
       procedure :: initialize => init_uniform1d
   end type Uniform1DMesh
 !Problem Type
-  type, public :: CLS1DDiffusionProblem
-      type(Uniform1DMesh)     :: mesh
-      real(kind=dp)           :: Tend
-      integer                 :: M
-      REAL(KIND=dp), ALLOCATABLE  :: u0(:,:)
-      REAL(KIND=dp), ALLOCATABLE  :: uu(:,:)
+  type, abstract, public :: AbstractCLS1DProblem
+      type(Uniform1DMesh)     :: mesh           !Mesh
+      integer                 :: M              !Number of equations
+      REAL(KIND=dp), ALLOCATABLE  :: u0(:,:)    !Initial condition
+      REAL(KIND=dp), ALLOCATABLE  :: uu(:,:)    !Current Solution
+      real(kind=dp)           :: Tend           !End time
+  end type AbstractCLS1DProblem
+
+  type, public, extends(AbstractCLS1DProblem) :: CLS1DDiffusionProblem
       procedure(Abstractflux),pointer,nopass :: f
       procedure(AbstractJacF),pointer,nopass :: Jf
       procedure(AbstractDiffMat),pointer,nopass :: K
@@ -51,57 +54,51 @@ IMPLICIT NONE
       procedure :: initialize => init_1DDiffProblem
   end type CLS1DDiffusionProblem
 
-  type, public :: CLS1DProblem
-      type(Uniform1DMesh)     :: mesh
-      real(kind=dp)           :: Tend
-      integer                 :: M
-      REAL(KIND=dp), ALLOCATABLE  :: u0(:,:)
-      REAL(KIND=dp), ALLOCATABLE  :: uu(:,:)
+  type, public, extends(AbstractCLS1DProblem) :: CLS1DProblem
       procedure(Abstractflux),pointer,nopass :: f
       procedure(AbstractJacF),pointer,nopass :: Jf
       CONTAINS
       procedure :: initialize => init_1DProblem
   end type CLS1DProblem
 
-!Algorithms type
-
-  type, abstract, public :: FVAlgorithm
+!Algorithms type 
+  type, abstract, public :: AbstractFV1DAlgorithm
+    !CLASS(AbstractCLS1DProblem), ALLOCATABLE :: problem
   CONTAINS
-      procedure(abstractGetStartMessage), deferred :: getStartMessage
-  end type FVAlgorithm
+    procedure(abstractUpdateRHS), deferred :: update
+    procedure(abstractCDT),deferred :: update_dt
+    procedure(abstractGetStartMessage), deferred :: getStartMessage
+  end type AbstractFV1DAlgorithm
 
-  type, abstract, public, extends(FVAlgorithm) :: FVDiff1DAlgorithm
-    CONTAINS
-      procedure(abstractUpdateDiffRHS), deferred :: update
+type, abstract, public, extends(AbstractFV1DAlgorithm) :: FVDiff1DAlgorithm
+    TYPE(CLS1DDiffusionProblem) :: problem
+    !CONTAINS
+      !procedure(abstractUpdateDiffRHS), deferred :: update
   end type FVDiff1DAlgorithm
 
-  type, abstract, public, extends(FVAlgorithm) :: FV1DAlgorithm
-    CONTAINS
-      procedure(abstractUpdateRHS), deferred :: update
-  end type FV1DAlgorithm
-  
+  type, abstract, public, extends(AbstractFV1DAlgorithm) :: FV1DAlgorithm
+    TYPE(CLS1DProblem) :: problem
+    !CONTAINS
+   end type FV1DAlgorithm
+
   abstract interface
-      subroutine abstractUpdateDiffRHS(alg, rhs, uold, dt, prob)
+      function abstractCDT (alg, u, CFL) result(dt)
+        import :: dp
+        import :: AbstractFV1DAlgorithm
+        CLASS(AbstractFV1DAlgorithm) :: alg
+        REAL(kind = dp), intent(in)  :: u(:,:), CFL
+        REAL(kind = dp)              :: dt
+      end function abstractCDT
+      subroutine abstractUpdateRHS(alg, rhs, uold, dt)
           import :: dp
-          import FVDiff1DAlgorithm
-          import CLS1DDiffusionProblem
-          CLASS(FVDiff1DAlgorithm)  :: alg
+          import AbstractFV1DAlgorithm
+          CLASS(AbstractFV1DAlgorithm)  :: alg
           real(kind = dp), intent(in) :: uold(:,:)
           real(kind = dp) :: rhs(:,:), dt
-          TYPE(CLS1DDiffusionProblem) :: prob
-      end subroutine abstractUpdateDiffRHS
-      subroutine abstractUpdateRHS(alg, rhs, uold, dt, prob)
-          import :: dp
-          import FV1DAlgorithm
-          import CLS1DProblem
-          CLASS(FV1DAlgorithm)  :: alg
-          real(kind = dp), intent(in) :: uold(:,:)
-          real(kind = dp) :: rhs(:,:), dt
-          TYPE(CLS1DProblem) :: prob
       end subroutine abstractUpdateRHS
       function abstractGetStartMessage(alg) result(message)
-            import FVAlgorithm
-            CLASS(FVAlgorithm)  :: alg
+            import AbstractFV1DAlgorithm
+            CLASS(AbstractFV1DAlgorithm)  :: alg
             CHARACTER(LEN=32)             :: message
       end function abstractGetStartMessage
 end interface

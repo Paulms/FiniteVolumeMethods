@@ -9,6 +9,7 @@ IMPLICIT NONE
   type, public, extends(FVDiff1DAlgorithm) :: KT1DAlgorithm
     real(kind=dp)           ::  theta = 1.0
   contains
+    procedure :: update_dt => update_dt_KT
     procedure :: update => update_KT
     procedure :: getStartMessage => start_message_Kt
     procedure :: initialize => init_KT
@@ -17,8 +18,8 @@ IMPLICIT NONE
 CONTAINS
     !Optional
     subroutine init_KT(alg, theta)
+      REAL (kind=dp)    :: theta
       CLASS(KT1DAlgorithm)    :: alg
-      real(kind=dp)           ::theta
       !========================
       alg%theta = theta
   end subroutine init_KT
@@ -27,12 +28,16 @@ CONTAINS
       CHARACTER(LEN=32)             :: message
       message = "Starting Kurganov-Tadmor Scheme..."
   end function start_message_Kt
-
-  subroutine update_KT(alg, rhs, uold, dt, prob)
+  function update_dt_KT (alg, u, CFL) result(dt)
+    CLASS(KT1DAlgorithm)  :: alg
+    REAL(kind = dp), intent(in)  :: u(:,:), CFL
+    REAL(kind = dp)              :: dt
+    dt = cdtdiff(u, alg%problem, CFL)
+  end function update_dt_KT
+  subroutine update_KT(alg, rhs, uold, dt)
       CLASS(KT1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
-      TYPE(CLS1DDiffusionProblem) :: prob
       REAL(kind = dp)               :: dx, theta
       REAL(kind = dp), ALLOCATABLE  :: uo(:,:), Du(:,:), uminus(:,:), uplus(:,:), aa(:)
       REAL(kind = dp), ALLOCATABLE  :: u_l(:,:), u_r(:,:), Df_l(:,:), Df_r(:,:), Psir(:,:), Psi(:,:)
@@ -43,11 +48,11 @@ CONTAINS
       INTEGER                       :: ss
       REAL(kind = dp)               :: lmb
       !==================
-      N = prob%mesh%N
-      M = prob%M
-      dx = prob%mesh%dx
+      N = alg%problem%mesh%N
+      M = alg%problem%M
+      dx = alg%problem%mesh%dx
       theta = alg%theta
-      boundary = prob%mesh%bdtype
+      boundary = alg%problem%mesh%bdtype
 
       ss = 0
       IF (boundary == PERIODIC) THEN
@@ -82,7 +87,7 @@ CONTAINS
       ALLOCATE(aa(N-1))
       aa = 0.0_dp
       do j = 1,(N-1)
-        aa(j)=max(fluxp(uminus(j,:), prob%Jf),fluxp(uplus(j,:), prob%Jf))
+        aa(j)=max(fluxp(uminus(j,:), alg%problem%Jf),fluxp(uplus(j,:), alg%problem%Jf))
       end do
   
         ! Flux slopes
@@ -99,8 +104,8 @@ CONTAINS
       ALLOCATE(Ful(M), Fulm(M), Fulp(M), Fur(M), Furm(M), Furp(M))
       Ful=0.0_dp; Fulm=0.0_dp; Fulp=0.0_dp; Fur=0.0_dp; Furm=0.0_dp; Furp=0.0_dp
       do j = 2,(N-2)
-        Ful = prob%f(u_l(j,:)); Fulm = prob%f(u_l(j-1,:)); Fulp = prob%f(u_l(j+1,:))
-        Fur = prob%f(u_r(j,:)); Furm = prob%f(u_r(j-1,:)); Furp = prob%f(u_r(j+1,:))
+        Ful = alg%problem%f(u_l(j,:)); Fulm = alg%problem%f(u_l(j-1,:)); Fulp = alg%problem%f(u_l(j+1,:))
+        Fur = alg%problem%f(u_r(j,:)); Furm = alg%problem%f(u_r(j-1,:)); Furp = alg%problem%f(u_r(j+1,:))
         do i = 1, M
           Df_l(j,i) = minmod(theta*(Ful(i)-Fulm(i)),(Fulp(i)-Fulm(i))/2,theta*(Fulp(i)-Ful(i)))
           Df_r(j,i) = minmod(theta*(Fur(i)-Furm(i)),(Furp(i)-Furm(i))/2,theta*(Furp(i)-Fur(i)))
@@ -117,8 +122,8 @@ CONTAINS
       ALLOCATE(Psir(N-1,M), Psi(N,M), Fphir(N-1,M), Fphil(N-1,M))
       Psir = 0.0_dp; Psi = 0.0_dp; Fphir = 0.0_dp; Fphil = 0.0_dp
       do j = 1,(N-1)
-        Fphir(j,:) = prob%f(phi_r(j,:))
-        Fphil(j,:) = prob%f(phi_l(j,:))
+        Fphir(j,:) = alg%problem%f(phi_r(j,:))
+        Fphil(j,:) = alg%problem%f(phi_l(j,:))
         if (abs(aa(j)) > 1.0e-6_dp) then
           Psir(j,:) = 0.5*(uo(j,:)+uo(j+1,:))+(1-lmb*aa(j))/4*(Du(j,:)-Du(j+1,:))-1/(2*aa(j))*(Fphir(j,:)-Fphil(j,:))
         else
@@ -151,7 +156,7 @@ CONTAINS
       !Du_ap = Du/dx
       ! Diffusion
       do j = 1,N-1
-        pp(j,:) = 0.5*MATMUL(prob%K(uo(j+1,:))+prob%K(uo(j,:)),Du_ap(j,:))
+        pp(j,:) = 0.5*MATMUL(alg%problem%K(uo(j+1,:))+alg%problem%K(uo(j,:)),Du_ap(j,:))
       end do
       ALLOCATE(hhleft(M),ppleft(M),hhright(M),ppright(M))
       hhleft = 0.0_dp; hhright = 0.0_dp; ppleft = 0.0_dp; ppright = 0.0_dp

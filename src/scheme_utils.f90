@@ -5,7 +5,7 @@ IMPLICIT NONE
 CONTAINS
 
 function cdtdiff(u, prob, CFL) result(dt)
-  type(CLS1DDiffusionProblem) :: prob
+  TYPE(CLS1DDiffusionProblem) :: prob
   REAL(kind = dp), intent(in)  :: u(:,:), CFL
   REAL(kind = dp)              :: dt, dx
   REAL(kind = dp)              :: maxp, maxpB
@@ -72,7 +72,7 @@ function cdt(u, prob, CFL) result(dt)
       STOP
     END IF
   end do
-  dt = CFL/(1/dx*maxp)
+  dt = CFL*dx/maxp
   DEALLOCATE(J)
 end function cdt
 
