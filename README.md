@@ -32,11 +32,19 @@ At the momento only Cartesian 1D uniform mesh available, using `FVMesh(N,a,b,bou
 
 ### Algorithms
 
-* High-Resolution Central Schemes:
+* High-Resolution Central Schemes (`SKT1DAlgorithm`)
 
 Kurganov, Tadmor, *New High-Resolution Central Schemes for Nonlinear Conservation Laws and Convection–Diffusion Equations*, Journal of Computational Physics, Vol 160, issue 1, 1 May 2000, Pages 241-282
 
-* Entropy Stable Schemes for degenerate convection-diffusion equations
+* Second-Order upwind central scheme (`CU1DAlgorithm`)
+
+Kurganov A., Noelle S., Petrova G., Semidiscrete Central-Upwind schemes for hyperbolic Conservation Laws and Hamilton-Jacobi Equations. SIAM. Sci Comput, Vol 23, No 3m pp 707-740. 2001
+
+* Dissipation Reduced Central upwind Scheme: Second-Order (`DRCU1DAlgorithm`)
+
+Kurganov A., Lin C., On the reduction of Numerical Dissipation in Central-Upwind # Schemes, Commun. Comput. Phys. Vol 2. No. 1, pp 141-163, Feb 2007.
+
+* Entropy Stable Schemes for degenerate convection-diffusion equations (`ESJP1DAlgorithm` y `ESJPe1DAlgorithm`)
 
 Jerez, C. Pares. *Entropy stable schemes for degenerate convection-difusion equations*. 2017. Society for Industrial and Applied Mathematics. SIAM. Vol. 55. No. 1. pp. 240-264
 

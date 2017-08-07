@@ -1,3 +1,7 @@
+! Based on
+! Jerez, Pares, Entropy stable schemes for degenerate convection-difusion
+! equations. 2017. Society for Industrial and Applied Mathematics. SIAM. Vol. 55.
+! No. 1. pp. 240-264
 MODULE EC_scheme
 USE decimal
 USE FVTypes
@@ -22,6 +26,7 @@ IMPLICIT NONE
     end function AbstractEntropyV
   end interface
   !Algorithm Type
+  ! Pares Scheme using original variables
   type, public, extends(FVDiff1DAlgorithm) :: ESJP1DAlgorithm
     real(kind=dp)           ::  epsilon = 0.0
     procedure(AbstractNflux),pointer,nopass :: Nf
@@ -32,7 +37,7 @@ IMPLICIT NONE
     procedure :: getStartMessage => start_message_ES
     procedure :: initialize => init_ES
   end type ESJP1DAlgorithm
-
+  ! Pares Scheme using entropy variables
   type, public, extends(FVDiff1DAlgorithm) :: ESJPe1DAlgorithm
     real(kind=dp)           ::  epsilon = 0.0
     procedure(AbstractNflux),pointer,nopass :: Nf
@@ -79,6 +84,8 @@ CONTAINS
       CHARACTER(LEN=32)             :: message
       message = "Starting Entropy Stable (ev) - Non conservative diffusion ..."
   end function start_message_EES
+  
+  ! Update time based on CFL condition
   function update_dt_ES (alg, u, CFL) result(dt)
     CLASS(ESJP1DAlgorithm)  :: alg
     REAL(kind = dp), intent(in)  :: u(:,:), CFL
@@ -91,14 +98,15 @@ CONTAINS
     REAL(kind = dp)              :: dt
     dt = cdtdiff(u, alg%problem, CFL)
   end function update_dt_EES
-  subroutine update_ES(alg, rhs, uold, dt)
+
+  !!!!!!!!!!! Main methods, used to update solution in each time integration step
+    subroutine update_ES(alg, rhs, uold, dt)
       CLASS(ESJP1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
-      real(kind = dp) :: rhs(:,:), dt
+      real(kind = dp)             :: rhs(:,:), dt
       REAL(kind = dp)               :: dx, epsilon
-      INTEGER                       :: N, j,M, boundary, ss
-      REAL(kind = dp), ALLOCATABLE  :: uleft(:), uright(:), kleft(:,:), kright(:,:)
-
+      INTEGER                       :: N, j,M, boundary
+      REAL(kind = dp), ALLOCATABLE  :: uu(:,:), hh(:,:), pp(:,:)
       !==================
       N = alg%problem%mesh%N
       M = alg%problem%M
@@ -106,45 +114,46 @@ CONTAINS
       epsilon = alg%epsilon
       boundary = alg%problem%mesh%bdtype
 
-      ALLOCATE(uleft(M), uright(M), kleft(M,M), kright(M,M))
-      uleft = 0.0_dp; uright = 0.0_dp; kleft = 0.0_dp;kright = 0.0_dp
-      uleft = uold(1,:); uright = uold(N,:)
+      ALLOCATE(uu(0:N+1,M))
+      ALLOCATE(hh(N+1,M), pp(N+1,M))
+      uu = 0.0_dp; hh = 0.0_dp; pp = 0.0_dp
+
+      uu(1:N,:) = uold
       if (boundary == PERIODIC) then
-        uleft = uold(N,:)
-        uright = uold(1,:)
+        uu(0,:) = uold(N,:); uu(N+1,:)=uold(1,:)
+      else
+        uu(0,:) = uold(1,:); uu(N+1,:)=uold(N,:)
       end if
 
-      j = 1
-      kleft = alg%Nk(uleft,uold(j,:))
-      kright = alg%Nk(uold(j,:),uold(j+1,:))
-      rhs(j,:) = -1.0_dp/dx*(alg%Nf(uold(j,:), uold(j+1,:))-alg%Nf(uleft, uold(j,:))) +&
-      1.0_dp/dx**2*(MATMUL(kright,(uold(j+1,:)-uold(j,:))) - MATMUL(kleft,(uold(j,:)-uleft))) +&
-      epsilon*1.0_dp/dx**2*(uold(j+1,:)-2*uold(j,:)+uleft)
-      DO j = 2,(N-1)
-      kleft = alg%Nk(uold(j-1,:),uold(j,:))
-      kright = alg%Nk(uold(j,:),uold(j+1,:))
-        rhs(j,:) = - 1.0_dp/dx*(alg%Nf(uold(j,:), uold(j+1,:))-alg%Nf(uold(j-1,:), uold(j,:))) +&
-        1.0_dp/dx**2*(MATMUL(kright,(uold(j+1,:)-uold(j,:))) - MATMUL(kleft,(uold(j,:)-uold(j-1,:))))+&
-        epsilon*1.0_dp/dx**2*(uold(j+1,:)-2*uold(j,:)+uold(j-1,:))
-      END DO
-      j = N
-      kleft = alg%Nk(uold(j-1,:),uold(j,:))
-      kright = alg%Nk(uold(j,:),uright)
-      rhs(j,:) = -1.0_dp/dx*(alg%Nf(uold(j,:), uright)-alg%Nf(uold(j-1,:), uold(j,:))) +&
-      1.0_dp/dx**2*(MATMUL(kright,(uright-uold(j,:))) - MATMUL(kleft,(uold(j,:)-uold(j-1,:))))+&
-      epsilon*1.0_dp/dx**2*(uright-2*uold(j,:)+uold(j-1,:))
-      DEALLOCATE(uleft, uright, kleft, kright)
+      ! Numerical Fluxes
+      do j = 1,(N+1)
+        hh(j,:) = alg%Nf(uu(j-1,:), uu(j,:))
+      end do
+      ! Diffusion
+      do j = 1,(N+1)
+        pp(j,:) = 1/dx*MATMUL(alg%Nk(uu(j-1,:), uu(j,:)),(uu(j,:)-uu(j-1,:)))+&
+        epsilon*1.0_dp/dx*(uu(j+1,:)-2*uu(j,:)+uu(j-1,:))
+      end do
+
+      !Compute Numeric Flux + Diffusion term
+      if (boundary == ZERO_FLUX) then
+        hh(1,:)=0.0; pp(1,:)=0.0
+        hh(N,:)=0.0; pp(N,:)=0.0
+      end if
+      do j = 1,N
+        rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))
+      end do
+      DEALLOCATE(uu, hh, pp)
 
   end subroutine update_ES
 
-  subroutine update_EES(alg, rhs, uold, dt)
+    subroutine update_EES(alg, rhs, uold, dt)
       CLASS(ESJPe1DAlgorithm)  :: alg
       real(kind = dp), intent(in) :: uold(:,:)
-      real(kind = dp) :: rhs(:,:), dt
+      real(kind = dp)             :: rhs(:,:), dt
       REAL(kind = dp)               :: dx, epsilon
-      INTEGER                       :: N, j,M, boundary, ss
-      REAL(kind = dp), ALLOCATABLE  :: vold(:,:),vleft(:), vright(:), kleft(:,:), kright(:,:)
-
+      INTEGER                       :: N, j,M, boundary
+      REAL(kind = dp), ALLOCATABLE  :: uu(:,:), vv(:,:), hh(:,:), pp(:,:)
       !==================
       N = alg%problem%mesh%N
       M = alg%problem%M
@@ -152,40 +161,40 @@ CONTAINS
       epsilon = alg%epsilon
       boundary = alg%problem%mesh%bdtype
 
-      ALLOCATE(vold(N,M),vleft(M), vright(M), kleft(M,M), kright(M,M))
-      vleft = 0.0_dp; vright = 0.0_dp; kleft = 0.0_dp;kright = 0.0_dp
-      vleft = uold(1,:); vright = uold(N,:); vold = 0.0_dp
+      ALLOCATE(uu(0:N+1,M), vv(0:N+1,M))
+      ALLOCATE(hh(N+1,M), pp(N+1,M))
+      uu = 0.0_dp; vv = 0.0_dp; hh = 0.0_dp; pp = 0.0_dp
 
-      do j = 1,N
-        vold(j,:) = alg%ve(uold(j,:))
-      end do
-
+      uu(1:N,:) = uold
       if (boundary == PERIODIC) then
-        vleft = vold(N,:)
-        vright = vold(1,:)
+        uu(0,:) = uold(N,:); uu(N+1,:)=uold(1,:)
+      else
+        uu(0,:) = uold(1,:); uu(N+1,:)=uold(N,:)
       end if
 
-      j = 1
-      kleft = alg%Nk(vleft,vold(j,:))
-      kright = alg%Nk(vold(j,:),vold(j+1,:))
-      rhs(j,:) = -1.0_dp/dx*(alg%Nf(vold(j,:), vold(j+1,:))-alg%Nf(vleft, vold(j,:))) +&
-      1.0_dp/dx**2*(MATMUL(kright,(vold(j+1,:)-vold(j,:))) - MATMUL(kleft,(vold(j,:)-vleft))) +&
-      epsilon*1.0_dp/dx**2*(vold(j+1,:)-2*vold(j,:)+vleft)
-      DO j = 2,(N-1)
-      kleft = alg%Nk(vold(j-1,:),vold(j,:))
-      kright = alg%Nk(vold(j,:),vold(j+1,:))
-        rhs(j,:) = - 1.0_dp/dx*(alg%Nf(vold(j,:), vold(j+1,:))-alg%Nf(vold(j-1,:), vold(j,:))) +&
-        1.0_dp/dx**2*(MATMUL(kright,(vold(j+1,:)-vold(j,:))) - MATMUL(kleft,(vold(j,:)-vold(j-1,:))))+&
-        epsilon*1.0_dp/dx**2*(vold(j+1,:)-2*vold(j,:)+vold(j-1,:))
-      END DO
-      j = N
-      kleft = alg%Nk(vold(j-1,:),vold(j,:))
-      kright = alg%Nk(vold(j,:),vright)
-      rhs(j,:) = -1.0_dp/dx*(alg%Nf(vold(j,:), vright)-alg%Nf(vold(j-1,:), vold(j,:))) +&
-      1.0_dp/dx**2*(MATMUL(kright,(vright-vold(j,:))) - MATMUL(kleft,(vold(j,:)-vold(j-1,:))))+&
-      epsilon*1.0_dp/dx**2*(vright-2*vold(j,:)+vold(j-1,:))
-      DEALLOCATE(vold, vleft, vright, kleft, kright)
+      do j = 0,(N+1)
+        vv(j,:) = alg%ve(uu(j,:))
+      end do
+
+      ! Numerical Fluxes
+      do j = 1,(N+1)
+        hh(j,:) = alg%Nf(vv(j-1,:), vv(j,:))
+      end do
+      ! Diffusion
+      do j = 1,(N+1)
+        pp(j,:) = 1/dx*MATMUL(alg%Nk(vv(j-1,:), vv(j,:)),vv(j,:)-vv(j-1,:))+&
+        epsilon*1.0_dp/dx*(vv(j,:)-vv(j-1,:))
+      end do
+
+      !Compute Numeric Flux + Diffusion term
+      if (boundary == ZERO_FLUX) then
+        hh(1,:)=0.0; pp(1,:)=0.0
+        hh(N,:)=0.0; pp(N,:)=0.0
+      end if
+      do j = 1,N
+        rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))
+      end do
+      DEALLOCATE(uu, vv, hh, pp)
 
   end subroutine update_EES
-
 END MODULE EC_scheme

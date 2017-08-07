@@ -106,4 +106,36 @@ function  fluxp(u, JacF) result(pp)
   pp = maxval(abs(WR))
   DEALLOCATE(J)
 end function fluxp
+
+function  minmaxl(u, JacF) result(pp)
+  REAL(kind = dp), intent(in)  :: u(:)
+  REAL(kind = dp) :: pp(2)
+  character jobvl, jobvr
+  real (kind = dp)              :: WR(size(u,1)), WL(size(u,1)), work(1000)
+  real (kind = dp)              :: VL(size(u,1),size(u,1)), VR(size(u,1),size(u,1))
+  REAL(kind = dp), ALLOCATABLE :: J(:,:)
+  INTEGER :: M, N, info, ldvl, ldvr, lwork
+
+    interface
+      function JacF(phi) result(Jf)
+          import  :: dp
+          real(kind = dp), intent(in) :: phi(:)
+          real(kind = dp) :: Jf(SIZE(phi,1),SIZE(phi,1))
+      end function JacF
+    end interface
+
+  M = size(u,1)
+  jobvl = 'N'
+  jobvr = 'N'
+  LDVL = M; LDVR = M; lwork = -1
+  WR = 0.0_dp; WL = 0.0_dp; VL = 0.0_dp; VR = 0.0_dp
+  WORK = 0.0_dp
+  ALLOCATE(J(M,M))
+  J = 0.0_dp
+  J = JacF(u)
+  call dgeev (jobvl, jobvr, M, J, M, WR, WL, VL, LDVL, VR, LDVR, WORK, 4*M, INFO)
+  pp = [minval(WR), maxval(WR)]
+  DEALLOCATE(J)
+end function minmaxl
+
 END MODULE scheme_utils
