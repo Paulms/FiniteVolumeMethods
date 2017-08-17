@@ -8,7 +8,7 @@ MODULE test1
 USE decimal
 USE plot
 USE FVTypes
-USE KT_scheme
+USE SKT_scheme
 USE EC_scheme
 USE FV_Solve
 IMPLICIT NONE
@@ -32,7 +32,7 @@ subroutine test1_run()
   CHARACTER(LEN=8), ALLOCATABLE  :: names(:)
   type(Uniform1DMesh) :: mesh
   type(CLS1DDiffusionProblem) :: prob
-  type(KT1DAlgorithm)         :: KtAlg
+  type(SKT1DAlgorithm)         :: KtAlg
   type(ESJP1DAlgorithm)       :: ESPJAlg
 
   ! Zero variables
