@@ -85,7 +85,7 @@ subroutine generic_time_integration(uu, time_scheme, algorithm, CFL, Tend, N,M,u
       !Second Step
       CALL algorithm%update(rhs, uold+dt*rhs, dt)
       uu = uu + 0.5*(uold + dt*rhs)
-    ELSE IF (time_scheme == SSPRRK33) THEN
+    ELSE IF (time_scheme == SSPRK33) THEN
       CALL algorithm%update(rhs, uold, dt)
       tmp = uold + dt*rhs
       CALL algorithm%update(rhs, tmp, dt)
