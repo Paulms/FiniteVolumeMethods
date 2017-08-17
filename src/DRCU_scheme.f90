@@ -126,7 +126,7 @@ CONTAINS
       !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then
         hh(1,:)=0.0; pp(1,:)=0.0
-        hh(N,:)=0.0; pp(N,:)=0.0
+        hh(N+1,:)=0.0; pp(N+1,:)=0.0
       end if
       do j = 1,N
         rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))

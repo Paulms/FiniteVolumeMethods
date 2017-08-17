@@ -72,7 +72,7 @@ CONTAINS
       lmb = dt/dx
 
       ! update vector
-      ! 1. Reconstruct approximate derivatives
+      ! 1. MUSCL reconstruction (using generalised minmod limiter)
       ALLOCATE(Du(0:N+1,M), uminus(N+1,M), uplus(N+1,M))
       Du = 0.0_dp; uminus = 0.0_dp; uplus = 0.0_dp
       do i = 1,M
@@ -110,7 +110,7 @@ CONTAINS
       !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then
         hh(1,:)=0.0; pp(1,:)=0.0
-        hh(N,:)=0.0; pp(N,:)=0.0
+        hh(N+1,:)=0.0; pp(N+1,:)=0.0
       end if
       do j = 1,N
         rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))
