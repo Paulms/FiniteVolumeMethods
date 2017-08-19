@@ -22,6 +22,10 @@ CU_scheme.o: ./CU_scheme.f90 decimal.o FV_types.o scheme_utils.o limiters.o
 	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./CU_scheme.f90
 DRCU_scheme.o: ./DRCU_scheme.f90 decimal.o FV_types.o scheme_utils.o limiters.o
 	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./DRCU_scheme.f90
+COMP_GLF_scheme.o: ./COMP_GLF_scheme.f90 decimal.o FV_types.o eno_weno.o scheme_utils.o limiters.o
+	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./COMP_GLF_scheme.f90
+eno_weno.o: ./eno_weno.f90 decimal.o
+	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./eno_weno.f90
 decimal.o: ./decimal.f90
 	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./decimal.f90
 limiters.o: ./limiters.f90 decimal.o FV_types.o
@@ -40,8 +44,8 @@ test3.o: ./test3.f90 decimal.o plot.o FV_types.o KT_scheme.o EC_scheme.o FV_Solv
 	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./test3.f90
 util.o: ./util.f90 decimal.o
 	$(FC) $(FFLAGS) $(OTHERFLAGS) -c	./util.f90
-SRC = ./decimal.f90 ./test1.f90 ./main.f90 ./util.f90 ./KT_scheme.f90 ./SKT_scheme.f90 ./CU_scheme.f90 ./DRCU_scheme.f90 ./test3.f90 ./EC_scheme.f90 ./scheme_utils.f90 ./FV_types.f90 ./limiters.f90 ./test2.f90 ./FV_Solve.f90 ./plot.f90
-OBJ = decimal.o test1.o main.o util.o KT_scheme.o SKT_scheme.o CU_scheme.o DRCU_scheme.o test3.o EC_scheme.o scheme_utils.o FV_types.o limiters.o test2.o FV_Solve.o plot.o
+SRC = ./decimal.f90 ./test1.f90 ./main.f90 ./util.f90 ./KT_scheme.f90 ./SKT_scheme.f90 ./CU_scheme.f90 ./DRCU_scheme.f90 ./COMP_GLF_scheme.f90 ./eno_weno.f90 ./test3.f90 ./EC_scheme.f90 ./scheme_utils.f90 ./FV_types.f90 ./limiters.f90 ./test2.f90 ./FV_Solve.f90 ./plot.f90
+OBJ = decimal.o test1.o main.o util.o KT_scheme.o SKT_scheme.o CU_scheme.o DRCU_scheme.o COMP_GLF_scheme.o test3.o EC_scheme.o eno_weno.o scheme_utils.o FV_types.o limiters.o test2.o FV_Solve.o plot.o
 clean: neat
 	-rm -f .../bin/fvtest.app.cppdefs $(OBJ) ../bin/fvtest.app *.mod
 neat:
