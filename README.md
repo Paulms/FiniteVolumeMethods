@@ -44,6 +44,10 @@ Kurganov A., Noelle S., Petrova G., Semidiscrete Central-Upwind schemes for hype
 
 Kurganov A., Lin C., On the reduction of Numerical Dissipation in Central-Upwind # Schemes, Commun. Comput. Phys. Vol 2. No. 1, pp 141-163, Feb 2007.
 
+* Component Wise Global Lax-Friedrichs Scheme (`COMP_GLF_1DAlgorithm`)
+
+R. Bürger, R. Donat, P. Mulet , C. A. Vega, On the implementation of WENO schemes for a class of polydisperse sedimentation models, Journal of Computational Physics, v.230 n.6, p.2322-2344, March, 2011  [doi>10.1016/j.jcp.2010.12.019]
+
 * Entropy Stable Schemes for degenerate convection-diffusion equations (`ESJP1DAlgorithm` y `ESJPe1DAlgorithm`)
 
 Jerez, C. Pares. *Entropy stable schemes for degenerate convection-difusion equations*. 2017. Society for Industrial and Applied Mathematics. SIAM. Vol. 55. No. 1. pp. 240-264
