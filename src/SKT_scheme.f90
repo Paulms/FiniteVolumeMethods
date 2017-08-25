@@ -47,7 +47,7 @@ CONTAINS
       real(kind = dp), intent(in) :: uold(:,:)
       real(kind = dp) :: rhs(:,:), dt
       REAL(kind = dp)               :: dx, theta
-      REAL(kind = dp), ALLOCATABLE  :: uu(:,:), Du(:,:), uminus(:,:), uplus(:,:), aa(:)
+      REAL(kind = dp), ALLOCATABLE  :: uu(:,:), Du(:,:), uminus(:,:), uplus(:,:), aa
       REAL(kind = dp), ALLOCATABLE  :: hh(:,:), pp(:,:), Du_ap(:,:)
       INTEGER                       :: N, M, i, j ,boundary
       REAL(kind = dp)               :: lmb
@@ -85,20 +85,18 @@ CONTAINS
       else
         Du(0,:) = Du(1,:); Du(N+1,:)=Du(N,:)
       end if
-      ! Local speeds of propagation
+      ! 
       uminus = uu(0:N,:)+0.5*Du(0:N,:)
       uplus = uu(1:N+1,:)-0.5*Du(1:N+1,:)
-      ALLOCATE(aa(N+1))
       aa = 0.0_dp
-      do j = 1,(N+1)
-        aa(j)=max(fluxp(uminus(j,:), alg%problem%Jf),fluxp(uplus(j,:), alg%problem%Jf))
-      end do
-  
-      ! Numerical Fluxes
+      
       ALLOCATE(hh(N+1,M), pp(N+1,M), Du_ap(0:N+1,M))
       hh = 0.0_dp; pp = 0.0_dp; Du_ap = 0.0_dp
       do j = 1,(N+1)
-        hh(j,:) = 0.5*(alg%problem%f(uplus(j,:))+alg%problem%f(uminus(j,:))) - aa(j)/2*(uplus(j,:) - uminus(j,:))
+        ! Local speeds of propagation
+        aa=max(fluxp(uminus(j,:), alg%problem%Jf),fluxp(uplus(j,:), alg%problem%Jf))
+        ! Numerical Fluxes
+        hh(j,:) = 0.5*(alg%problem%f(uplus(j,:))+alg%problem%f(uminus(j,:))) - aa/2*(uplus(j,:) - uminus(j,:))
       end do
       !Du_ap = (uu(1:N+1,:)-uu(0:N,:))/dx
       Du_ap = Du/dx
@@ -116,7 +114,7 @@ CONTAINS
         rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))
       end do
 
-      DEALLOCATE(uu, uminus, uplus, aa, Du)
+      DEALLOCATE(uu, uminus, uplus, Du)
       DEALLOCATE(hh, pp, Du_ap)
   end subroutine update_SKT
 END MODULE SKT_scheme
