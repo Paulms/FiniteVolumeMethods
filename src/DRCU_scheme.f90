@@ -104,7 +104,7 @@ CONTAINS
       flm = 0.0_dp; flp = 0.0_dp; wint = 0.0_dp; qj = 0.0_dp
       do j = 1,(N+1)
         if (abs(aap(j)-aam(j))<1.0e-8_dp) then
-          hh(j,:) = 0.0_dp
+          hh(j,:) = 0.5_dp*(alg%problem%f(uminus(j,:))+alg%problem%f(uplus(j,:)))
         else
           flm = alg%problem%f(uminus(j,:))
           flp = alg%problem%f(uplus(j,:))
