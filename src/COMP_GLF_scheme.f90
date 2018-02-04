@@ -125,7 +125,7 @@ CONTAINS
         end do
       end do
       do j = 1,(N+1)
-        pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du(j,:)/dx)
+        pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du(j-1,:)/dx)
         !pp(j,:) = 0.5_dp/dx*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),uu(j,:)-uu(j-1,:))
       end do
 

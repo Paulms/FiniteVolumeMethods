@@ -104,7 +104,7 @@ CONTAINS
       Du_ap = Du/dx
       ! Diffusion
       do j = 1,N+1
-        pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du_ap(j,:))
+        pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du_ap(j-1,:))
       end do
 
       !Compute Numeric Flux + Diffusion term
