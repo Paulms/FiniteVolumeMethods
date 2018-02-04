@@ -103,7 +103,7 @@ CONTAINS
       hh = 0.0_dp; pp = 0.0_dp; Du_ap = 0.0_dp
       do j = 1,(N+1)
         if (abs(aap(j)-aam(j))<1.0e-8_dp) then
-          hh(j,:) = 0.0_dp
+          hh(j,:) = 0.5_dp*(alg%problem%f(uminus(j,:))+alg%problem%f(uplus(j,:)))
         else
           hh(j,:) = (aap(j)*alg%problem%f(uminus(j,:))-aam(j)*alg%problem%f(uplus(j,:)))/(aap(j)-aam(j)) + &
           (aap(j)*aam(j))/(aap(j)-aam(j))*(uplus(j,:) - uminus(j,:))
