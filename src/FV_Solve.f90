@@ -73,6 +73,9 @@ subroutine generic_time_integration(uu, time_scheme, algorithm, CFL, Tend, N,M,u
    DO WHILE (tt <= Tend)
     uold = uu
     dt = algorithm%update_dt(uold, CFL)
+    if (tt + dt > Tend) THEN
+      dt = Tend - tt
+    end if
     !Scheme with forward Euler
     IF (time_scheme == FORWARD_EULER) THEN
       CALL algorithm%update(rhs, uold, dt)
