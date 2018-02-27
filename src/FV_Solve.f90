@@ -70,7 +70,7 @@ subroutine generic_time_integration(uu, time_scheme, algorithm, CFL, Tend, N,M,u
   CALL cpu_TIME(tiempo1)
   tt = 0.0_dp
   uu = u0
-   DO WHILE (tt <= Tend)
+   DO WHILE (tt < Tend)
     uold = uu
     dt = algorithm%update_dt(uold, CFL)
     if (tt + dt > Tend) THEN
