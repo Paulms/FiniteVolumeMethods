@@ -2,6 +2,7 @@ MODULE FV_Solve
 USE decimal
 USE FVTypes
 USE scheme_utils
+use omp_lib
 
 IMPLICIT NONE
 
@@ -44,7 +45,7 @@ END subroutine solve_1D_diff
 
 subroutine generic_time_integration(uu, time_scheme, algorithm, CFL, Tend, N,M,u0)
   INTEGER                   :: time_scheme
-  INTEGER                   :: N, M, percentage
+  INTEGER                   :: N, M, percentage, it
   REAL(kind = dp)           :: dt, limit, Tend, CFL
   REAL(kind = dp)           :: tt, uu(:,:), u0(:,:)
   REAL(kind = dp), ALLOCATABLE  :: tmp(:,:), uold(:,:),rhs(:,:),rhs2(:,:)
@@ -58,19 +59,22 @@ subroutine generic_time_integration(uu, time_scheme, algorithm, CFL, Tend, N,M,u
   ! Setup progress message
   tiempo1 = 0.0_dp;tiempo2 = 0.0_dp
   percentage = 0
-  limit = Tend/5
+  limit = Tend/20.0_dp
   !Init variables
   ALLOCATE(uold(N,M), tmp(N,M))
   ALLOCATE(rhs(N,M),rhs2(N,M))
 
   uold = 0.0_dp; rhs = 0.0_dp; rhs2 = 0.0_dp
   tmp = 0.0_dp
+  it = 0
   message = algorithm%GetStartMessage()
   Print *, message
-  CALL cpu_TIME(tiempo1)
+  tiempo1 = omp_get_wtime( )
+  !CALL cpu_TIME(tiempo1)
   tt = 0.0_dp
   uu = u0
-   DO WHILE (tt < Tend)
+  DO WHILE (tt < Tend)
+    it = it + 1
     uold = uu
     dt = algorithm%update_dt(uold, CFL)
     if (tt + dt > Tend) THEN
@@ -101,14 +105,15 @@ subroutine generic_time_integration(uu, time_scheme, algorithm, CFL, Tend, N,M,u
     END IF
     !Print progress
     IF (tt > limit) THEN
-      percentage = percentage + 20
-      limit = limit + Tend/5
+      percentage = percentage + 5
+      limit = limit + Tend/20.0_dp
       print *, percentage, "% completed"
     END IF
     tt = tt + dt
   END DO
   print *, "completed..."
-  CALL cpu_TIME(tiempo2)
+  !CALL cpu_TIME(tiempo2)
+  tiempo2 = omp_get_wtime( )
   PRINT*,'tiempo de CPU = ',tiempo2-tiempo1
   DEALLOCATE(uold, rhs, tmp,rhs2)
 end subroutine generic_time_integration
