@@ -101,6 +101,10 @@ CONTAINS
       ! Numerical Fluxes
       ALLOCATE(hh(N+1,M), pp(N+1,M), Du_ap(0:N+1,M))
       hh = 0.0_dp; pp = 0.0_dp; Du_ap = 0.0_dp
+      !Du_ap = (uu(1:N+1,:)-uu(0:N,:))/dx
+      Du_ap = Du/dx
+      !$omp parallel
+      !$omp do
       do j = 1,(N+1)
         if (abs(aap(j)-aam(j))<1.0e-8_dp) then
           hh(j,:) = 0.5_dp*(alg%problem%f(uminus(j,:))+alg%problem%f(uplus(j,:)))
@@ -108,13 +112,11 @@ CONTAINS
           hh(j,:) = (aap(j)*alg%problem%f(uminus(j,:))-aam(j)*alg%problem%f(uplus(j,:)))/(aap(j)-aam(j)) + &
           (aap(j)*aam(j))/(aap(j)-aam(j))*(uplus(j,:) - uminus(j,:))
         end if
-      end do
-      !Du_ap = (uu(1:N+1,:)-uu(0:N,:))/dx
-      Du_ap = Du/dx
-      ! Diffusion
-      do j = 1,N+1
+        ! Diffusion
         pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du_ap(j-1,:))
       end do
+      !$omp end do
+      !$omp end parallel
 
       !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then

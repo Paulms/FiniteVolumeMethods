@@ -13,6 +13,12 @@ PROGRAM DiffCorrect
   USE test3
   IMPLICIT NONE
 
+  ! Init threads
+  integer t
+  call omp_set_num_threads( 4 )
+  t = omp_get_max_threads()
+  write(*,*)'Number of threads:',t
+
   ! Run Test(run_reference, run_error)
   CALL test1_run()
   !CALL test2_run()

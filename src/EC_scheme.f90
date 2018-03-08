@@ -90,13 +90,13 @@ CONTAINS
     CLASS(ESJP1DAlgorithm)  :: alg
     REAL(kind = dp), intent(in)  :: u(:,:), CFL
     REAL(kind = dp)              :: dt
-    dt = cdtdiff(u, alg%problem, CFL)
+    dt = cfldiff(u, alg%problem, CFL,2.0_dp)
   end function update_dt_ES
     function update_dt_EES (alg, u, CFL) result(dt)
     CLASS(ESJPe1DAlgorithm)  :: alg
     REAL(kind = dp), intent(in)  :: u(:,:), CFL
     REAL(kind = dp)              :: dt
-    dt = cdtdiff(u, alg%problem, CFL)
+    dt = cfldiff(u, alg%problem, CFL, 2.0_dp)
   end function update_dt_EES
 
   !!!!!!!!!!! Main methods, used to update solution in each time integration step
@@ -125,20 +125,22 @@ CONTAINS
         uu(0,:) = uold(1,:); uu(N+1,:)=uold(N,:)
       end if
 
-      ! Numerical Fluxes
+      !$omp parallel
+      !$omp do
       do j = 1,(N+1)
+        ! Numerical Fluxes
         hh(j,:) = alg%Nf(uu(j-1,:), uu(j,:))
-      end do
-      ! Diffusion
-      do j = 1,(N+1)
+        ! Diffusion
         pp(j,:) = 1/dx*MATMUL(alg%Nk(uu(j-1,:), uu(j,:)),(uu(j,:)-uu(j-1,:)))+&
         epsilon*1.0_dp/dx*(uu(j+1,:)-2*uu(j,:)+uu(j-1,:))
       end do
+      !$omp end do
+      !$omp end parallel
 
       !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then
         hh(1,:)=0.0; pp(1,:)=0.0
-        hh(N+1,:)=0.0; pp(N+1,:)=0.0
+        hh(N,:)=0.0; pp(N,:)=0.0
       end if
       do j = 1,N
         rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))
@@ -175,21 +177,23 @@ CONTAINS
       do j = 0,(N+1)
         vv(j,:) = alg%ve(uu(j,:))
       end do
-
-      ! Numerical Fluxes
+      
+      !Compute Numeric Flux + Diffusion term
+      !$omp parallel
+      !$omp do
       do j = 1,(N+1)
+        ! Numerical Fluxes
         hh(j,:) = alg%Nf(vv(j-1,:), vv(j,:))
-      end do
-      ! Diffusion
-      do j = 1,(N+1)
+        ! Diffusion
         pp(j,:) = 1/dx*MATMUL(alg%Nk(vv(j-1,:), vv(j,:)),vv(j,:)-vv(j-1,:))+&
         epsilon*1.0_dp/dx*(vv(j,:)-vv(j-1,:))
       end do
+      !$omp end do
+      !$omp end parallel
 
-      !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then
         hh(1,:)=0.0; pp(1,:)=0.0
-        hh(N,:)=0.0; pp(N,:)=0.0
+        hh(N+1,:)=0.0; pp(N+1,:)=0.0
       end if
       do j = 1,N
         rhs(j,:) = - 1/dx * (hh(j+1,:)-hh(j,:)-(pp(j+1,:)-pp(j,:)))

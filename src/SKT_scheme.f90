@@ -92,18 +92,20 @@ CONTAINS
       
       ALLOCATE(hh(N+1,M), pp(N+1,M), Du_ap(0:N+1,M))
       hh = 0.0_dp; pp = 0.0_dp; Du_ap = 0.0_dp
+      !Du_ap = (uu(1:N+1,:)-uu(0:N,:))/dx
+      Du_ap = Du/dx
+      !$omp parallel
+      !$omp do
       do j = 1,(N+1)
         ! Local speeds of propagation
         aa=max(fluxp(uminus(j,:), alg%problem%Jf),fluxp(uplus(j,:), alg%problem%Jf))
         ! Numerical Fluxes
         hh(j,:) = 0.5*(alg%problem%f(uplus(j,:))+alg%problem%f(uminus(j,:))) - aa/2*(uplus(j,:) - uminus(j,:))
-      end do
-      !Du_ap = (uu(1:N+1,:)-uu(0:N,:))/dx
-      Du_ap = Du/dx
-      ! Diffusion
-      do j = 1,N+1
+        ! Diffusion
         pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du_ap(j-1,:))
       end do
+      !$omp end do
+      !$omp end parallel
 
       !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then

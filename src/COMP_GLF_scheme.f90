@@ -95,10 +95,14 @@ CONTAINS
       ! Global Lax Frierichs splitting
       ALLOCATE(fminus(-k:N+k+1,M), fplus(-k:N+k+1,M))
       fminus = 0.0_dp; fplus = 0.0_dp
+      !$omp parallel
+      !$omp do
       do j = 1,N
         fminus(j,:) = 0.5_dp*(alg%problem%f(uu(j,:))-alpha*uu(j,:))
         fplus(j,:) = 0.5_dp*(alg%problem%f(uu(j,:))+alpha*uu(j,:))
       end do
+      !$omp end do
+      !$omp end parallel
       do j = 1,(k+1)
         if (boundary == ZERO_FLUX) then
           fminus(1-j,:) = fminus(1,:); fminus(N+j,:) = fminus(N,:)
@@ -109,13 +113,6 @@ CONTAINS
         end if
       end do
 
-      ! WENO 5 reconstruction
-      do j = 0,N
-        do i = 1,M
-          hh(j+1,i) = sum(WENO_pm_rec(fminus(j-k+1:j+k+1,i),fplus(j-k:j+k,i),order*2-1, crj))
-        end do
-      end do
-      ! Diffusion
       ! limit slope
       ALLOCATE(Du(0:N+1,M))
       Du = 0.0_dp
@@ -124,10 +121,19 @@ CONTAINS
           Du(j,i) = minmod((uu(j,i)-uu(j-1,i)),(uu(j+1,i)-uu(j-1,i))/2,(uu(j+1,i)-uu(j,i)))
         end do
       end do
-      do j = 1,(N+1)
-        pp(j,:) = 0.5*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),Du(j-1,:)/dx)
-        !pp(j,:) = 0.5_dp/dx*MATMUL(alg%problem%K(uu(j,:))+alg%problem%K(uu(j-1,:)),uu(j,:)-uu(j-1,:))
+
+      ! WENO 5 reconstruction
+      !$omp parallel
+      !$omp do
+      do j = 0,N
+        do i = 1,M
+          ! Diffusion
+          hh(j+1,i) = sum(WENO_pm_rec(fminus(j-k+1:j+k+1,i),fplus(j-k:j+k,i),order*2-1, crj))
+          pp(j+1,:) = 0.5*MATMUL(alg%problem%K(uu(j+1,:))+alg%problem%K(uu(j,:)),Du(j,:)/dx)
+        end do
       end do
+      !$omp end do
+      !$omp end parallel
 
       !Compute Numeric Flux + Diffusion term
       if (boundary == ZERO_FLUX) then
